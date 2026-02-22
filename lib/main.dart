@@ -14,6 +14,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = ArticleViewModel(ArticleModel());
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
@@ -24,6 +25,35 @@ class MainApp extends StatelessWidget {
   }
 }
 
+// The ViewModel in MVVM
+class ArticleViewModel extends ChangeNotifier {
+  final ArticleModel model;
+  Summary? summary;
+  String? errorMessage;
+  bool loading = false;
+
+  ArticleViewModel(this.model) {
+    getRandomArticleSummary();
+  }
+
+  Future<void> getRandomArticleSummary() async {
+    loading = true;
+    notifyListeners();
+    try {
+      summary = await model.getRandomArticleSummary();
+      print('Article loaded: ${summary!.titles.normalized}'); // Temporary
+      errorMessage = null;
+    } on HttpException catch (error) {
+      print('Error loading article: ${error.message}'); // Temporary
+      errorMessage = error.message;
+      summary = null;
+    }
+    loading = false;
+    notifyListeners();
+  }
+}
+
+// The Model in MVVM
 class ArticleModel {
   Future<Summary> getRandomArticleSummary() async {
     // https://en.wikipedia.org/api/rest_v1/page/random/summary
